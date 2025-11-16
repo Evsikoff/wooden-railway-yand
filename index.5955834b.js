@@ -64889,47 +64889,60 @@ var Support = function() {
   , _v2 = new Vector3
   , App = function() {
     function e(t) {
+        console.log('[APP] App constructor called with canvas:', t.canvas);
         var i = t.canvas;
         _classCallCheck2(this, e),
         _defineProperty2(this, "statsEnabled", !1),
         properties.canvas = i instanceof HTMLCanvasElement ? i : null,
+        console.log('[APP] Canvas element is valid:', properties.canvas !== null),
         this.raf = null,
         this.statsEnabled && (this.stats = new Stats,
         this.stats.showPanel(0),
         this.stats.domElement.style.cssText = "position:absolute;top:0px;right:0px;z-index:70;user-select:none",
         document.body.appendChild(this.stats.dom)),
+        console.log('[APP] Calling prePreInit...'),
         this.prePreInit(),
         console.log("%c Created by Lusion: https://lusion.co", "border:2px solid gray; padding:5px; font-family:monospace; font-size:11px;")
     }
     return _createClass2(e, [{
         key: "prePreInit",
         value: function() {
+            console.log('[APP] prePreInit started'),
             document.querySelector("body").style.display = "block",
+            console.log('[APP] Calling support.prePreInit()'),
             support.prePreInit(),
+            console.log('[APP] Browser supported:', properties._isSupported),
             !0 === properties._isSupported ? this.preInit() : support.notSupported()
         }
     }, {
         key: "preInit",
         value: function() {
+            console.log('[APP] preInit started'),
+            console.log('[APP] Setting up cross origins...');
             for (var e = this, t = 0, i = Object.entries(settings.CROSS_ORIGINS); t < i.length; t++) {
                 var r = _slicedToArray(i[t], 2)
                   , n = r[0]
                   , a = r[1];
                 properties.loader.setCrossOrigin(n, a)
             }
+            console.log('[APP] Registering loaders...'),
             properties.loader.register(BufItem),
             properties.loader.register(GLTFItem),
             properties.loader.register(RGBEItem),
             properties.loader.register(TextureItem),
             properties.loader.register(ThreeLoaderItem),
+            console.log('[APP] Calling preInitStage...'),
             this.preInitStage(),
+            console.log('[APP] Initializing subsystems...'),
             cameraControls$1.preInit(),
             input.preInit(),
             soundAudio.preInit(),
             musicAudio.preInit(),
             urlManager.preInit(),
             visuals.preInit(),
+            console.log('[APP] Initializing UI...'),
             ui.preInit((function() {
+                console.log('[APP] UI preInit callback - calling init()'),
                 e.init(),
                 landscape.testCollisionAgainstAllTrackPieces()
             }
@@ -64944,6 +64957,7 @@ var Support = function() {
                 return e.preventDefault()
             }
             )),
+            console.log('[APP] Starting render loop...'),
             this._loop()
         }
     }, {
@@ -65126,6 +65140,39 @@ var Support = function() {
     }]),
     e
 }();
-new App({
-    canvas: document.getElementById("canvas")
-});
+
+// Логирование для отладки в LogCat
+console.log('[APP] Script loaded, waiting for device ready...');
+
+// Функция инициализации приложения
+function initializeApp() {
+    console.log('[APP] Initializing app...');
+    console.log('[APP] Canvas element:', document.getElementById("canvas"));
+
+    try {
+        new App({
+            canvas: document.getElementById("canvas")
+        });
+        console.log('[APP] App instance created successfully');
+    } catch (error) {
+        console.error('[APP] Error creating App instance:', error);
+        console.error('[APP] Error stack:', error.stack);
+    }
+}
+
+// Проверка на Cordova окружение
+if (window.cordova) {
+    console.log('[APP] Cordova detected, waiting for deviceready event...');
+    document.addEventListener('deviceready', function() {
+        console.log('[APP] Device ready event fired!');
+        initializeApp();
+    }, false);
+} else {
+    console.log('[APP] No Cordova detected, initializing immediately...');
+    // Для веб-версии запускаем сразу
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initializeApp);
+    } else {
+        initializeApp();
+    }
+}

@@ -38,7 +38,9 @@
     <meta name="twitter:url" content="https://choochooworld.com/" />
     <!-- <script async src="https://www.googletagmanager.com/gtag/js?id=G-NVP1BM95RS"></script>
     <script>if(-1!==document.location.hostname.search("choochooworld.com")){function gtag(){dataLayer.push(arguments)}window.dataLayer=window.dataLayer||[],gtag("js",new Date),gtag("config","G-NVP1BM95RS")}</script> -->
-    <script>function preventZoom(e){e.preventDefault(),document.body.style.zoom=1}Object.assign||document.documentElement.classList.add("not-supported not-supported--browser"),document.documentElement.classList.remove("no-js"),/(ipad|iphone|android)/i.test((navigator.userAgent||navigator.vendor).toLowerCase())?document.documentElement.classList.add("is-mobile"):document.documentElement.classList.add("is-desktop"),document.addEventListener("gesturestart",(e=>preventZoom(e))),document.addEventListener("gesturechange",(e=>preventZoom(e))),document.addEventListener("gestureend",(e=>preventZoom(e)))</script>
+    <script>console.log('[INIT] HTML head scripts loading...');function preventZoom(e){e.preventDefault(),document.body.style.zoom=1}Object.assign||document.documentElement.classList.add("not-supported not-supported--browser"),document.documentElement.classList.remove("no-js"),/(ipad|iphone|android)/i.test((navigator.userAgent||navigator.vendor).toLowerCase())?document.documentElement.classList.add("is-mobile"):document.documentElement.classList.add("is-desktop"),document.addEventListener("gesturestart",(e=>preventZoom(e))),document.addEventListener("gesturechange",(e=>preventZoom(e))),document.addEventListener("gestureend",(e=>preventZoom(e)));console.log('[INIT] Device type:', document.documentElement.classList.contains('is-mobile') ? 'mobile' : 'desktop');</script>
+    <script src="./cordova.js"></script>
+    <script>console.log('[INIT] Cordova.js loaded:', typeof window.cordova !== 'undefined');</script>
     <script type="module" crossorigin src="./index.5955834b.js"></script>
     <link rel="stylesheet" href="./index.0f8f18fe.css">
 </head>
