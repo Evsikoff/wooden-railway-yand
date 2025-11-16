@@ -27163,7 +27163,7 @@ var lottie$1$1 = {
                     t.postMessage({
                         type: "loadAnimation",
                         path: e,
-                        fullPath: window.location.origin + window.location.pathname,
+                        fullPath: ".",
                         id: n
                     })
                 },
@@ -27173,7 +27173,7 @@ var lottie$1$1 = {
                     t.postMessage({
                         type: "loadData",
                         path: e,
-                        fullPath: window.location.origin + window.location.pathname,
+                        fullPath: ".",
                         id: n
                     })
                 },
@@ -36717,7 +36717,7 @@ var isSSR = "undefined" == typeof window, DetectUA = function() {
     _defineProperty2(this, "isRetina", window.devicePixelRatio && window.devicePixelRatio >= 1.5),
     _defineProperty2(this, "devicePixelRatio", window.devicePixelRatio || 1),
     _defineProperty2(this, "cpuCoreCount", navigator.hardwareConcurrency || 1),
-    _defineProperty2(this, "baseUrl", document.location.origin),
+    _defineProperty2(this, "baseUrl", "."),
     _defineProperty2(this, "isIFrame", window.self !== window.top),
     _defineProperty2(this, "isSupportWebP", !(!(t = document.createElement("canvas")).getContext || !t.getContext("2d")) && 0 == t.toDataURL("image/webp").indexOf("data:image/webp")),
     this.isMobile ? this.device = "mobile" : this.device = "desktop"
@@ -48463,7 +48463,7 @@ var normalizeWheel_1 = normalizeWheel$1
                     t.postMessage({
                         type: "loadAnimation",
                         path: e,
-                        fullPath: window.location.origin + window.location.pathname,
+                        fullPath: ".",
                         id: n
                     })
                 },
@@ -48473,7 +48473,7 @@ var normalizeWheel_1 = normalizeWheel$1
                     t.postMessage({
                         type: "loadData",
                         path: e,
-                        fullPath: window.location.origin + window.location.pathname,
+                        fullPath: ".",
                         id: n
                     })
                 },
