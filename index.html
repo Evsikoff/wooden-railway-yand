@@ -39,6 +39,105 @@
     <!-- <script async src="https://www.googletagmanager.com/gtag/js?id=G-NVP1BM95RS"></script>
     <script>if(-1!==document.location.hostname.search("choochooworld.com")){function gtag(){dataLayer.push(arguments)}window.dataLayer=window.dataLayer||[],gtag("js",new Date),gtag("config","G-NVP1BM95RS")}</script> -->
     <script>function preventZoom(e){e.preventDefault(),document.body.style.zoom=1}Object.assign||document.documentElement.classList.add("not-supported not-supported--browser"),document.documentElement.classList.remove("no-js"),/(ipad|iphone|android)/i.test((navigator.userAgent||navigator.vendor).toLowerCase())?document.documentElement.classList.add("is-mobile"):document.documentElement.classList.add("is-desktop"),document.addEventListener("gesturestart",(e=>preventZoom(e))),document.addEventListener("gesturechange",(e=>preventZoom(e))),document.addEventListener("gestureend",(e=>preventZoom(e)))</script>
+    <script>
+    // Управление звуком при переключении вкладок и сворачивании окна
+    (function() {
+        'use strict';
+
+        var audioContexts = [];
+        var originalAudioContext = window.AudioContext || window.webkitAudioContext;
+
+        // Перехватываем создание AudioContext для отслеживания
+        if (originalAudioContext) {
+            var AudioContextWrapper = function() {
+                var ctx = new originalAudioContext();
+                audioContexts.push(ctx);
+                return ctx;
+            };
+
+            // Копируем все статические свойства и методы
+            for (var key in originalAudioContext) {
+                if (originalAudioContext.hasOwnProperty(key)) {
+                    AudioContextWrapper[key] = originalAudioContext[key];
+                }
+            }
+
+            AudioContextWrapper.prototype = originalAudioContext.prototype;
+
+            window.AudioContext = AudioContextWrapper;
+            if (window.webkitAudioContext) {
+                window.webkitAudioContext = AudioContextWrapper;
+            }
+        }
+
+        // Обработчик изменения видимости страницы
+        document.addEventListener('visibilitychange', function() {
+            if (document.hidden) {
+                pauseAllAudio();
+            } else {
+                resumeAllAudio();
+            }
+        });
+
+        function pauseAllAudio() {
+            // Приостанавливаем все Web Audio API контексты
+            audioContexts.forEach(function(ctx) {
+                if (ctx.state === 'running') {
+                    ctx.suspend().catch(function(err) {
+                        console.warn('Failed to suspend audio context:', err);
+                    });
+                }
+            });
+
+            // Приглушаем Howler.js если он используется
+            if (window.Howler) {
+                try {
+                    window.Howler.mute(true);
+                } catch (err) {
+                    console.warn('Failed to mute Howler:', err);
+                }
+            }
+
+            // Приостанавливаем HTML5 audio/video элементы
+            document.querySelectorAll('audio, video').forEach(function(element) {
+                if (!element.paused) {
+                    element.dataset.wasPlayingBeforeHidden = 'true';
+                    element.pause();
+                }
+            });
+        }
+
+        function resumeAllAudio() {
+            // Возобновляем Web Audio API контексты
+            audioContexts.forEach(function(ctx) {
+                if (ctx.state === 'suspended') {
+                    ctx.resume().catch(function(err) {
+                        console.warn('Failed to resume audio context:', err);
+                    });
+                }
+            });
+
+            // Возобновляем Howler.js если он был приглушен
+            if (window.Howler) {
+                try {
+                    window.Howler.mute(false);
+                } catch (err) {
+                    console.warn('Failed to unmute Howler:', err);
+                }
+            }
+
+            // Возобновляем HTML5 audio/video элементы
+            document.querySelectorAll('audio, video').forEach(function(element) {
+                if (element.dataset.wasPlayingBeforeHidden === 'true') {
+                    delete element.dataset.wasPlayingBeforeHidden;
+                    element.play().catch(function(err) {
+                        console.warn('Failed to resume media playback:', err);
+                    });
+                }
+            });
+        }
+    })();
+    </script>
     <script type="module" crossorigin src="./index.5955834b.js"></script>
     <link rel="stylesheet" href="./index.0f8f18fe.css">
 </head>
