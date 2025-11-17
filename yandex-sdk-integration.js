@@ -29,6 +29,25 @@
                 }
             }
 
+            // Инициализируем менеджер прогресса игры
+            if (window.GameProgressManager) {
+                await window.GameProgressManager.init(ysdk);
+
+                // Загружаем прогресс игрока
+                const savedProgress = await window.GameProgressManager.loadGameProgress();
+
+                if (savedProgress) {
+                    console.log('✓ Прогресс игрока загружен и готов к использованию');
+                    // Сохраняем прогресс в глобальной переменной для доступа из игры
+                    window.savedGameProgress = savedProgress;
+                } else {
+                    console.log('ℹ Новый игрок, прогресс не найден');
+                    window.savedGameProgress = null;
+                }
+            } else {
+                console.warn('⚠ GameProgressManager не найден, функционал сохранения недоступен');
+            }
+
             // Устанавливаем наблюдатель за кнопкой "Начать строительство"
             setupStartButtonObserver();
 
