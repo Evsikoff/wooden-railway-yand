@@ -1,0 +1,26 @@
+{
+  "headers": [
+    {
+      "source": "/assets/meta/(site.webmanifest|manifest.json)",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "application/manifest+json"
+        },
+        {
+          "key": "Access-Control-Allow-Origin",
+          "value": "*"
+        }
+      ]
+    },
+    {
+      "source": "/assets/meta/browserconfig.xml",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "application/xml"
+        }
+      ]
+    }
+  ]
+}
