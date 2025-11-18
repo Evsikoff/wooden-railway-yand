@@ -76,6 +76,40 @@
             return;
         }
 
+        let loadingReadyCalled = false;
+
+        function isStartButtonInteractable() {
+            const style = window.getComputedStyle(startButton);
+            const rect = startButton.getBoundingClientRect();
+            return (
+                style.display !== 'none' &&
+                style.visibility !== 'hidden' &&
+                style.pointerEvents !== 'none' &&
+                rect.width > 0 &&
+                rect.height > 0
+            );
+        }
+
+        function callLoadingReady(observer) {
+            if (loadingReadyCalled) {
+                return;
+            }
+
+            if (!ysdk || !ysdk.features || !ysdk.features.LoadingAPI) {
+                console.warn('LoadingAPI недоступен');
+                return;
+            }
+
+            if (!isStartButtonInteractable()) {
+                return;
+            }
+
+            loadingReadyCalled = true;
+            ysdk.features.LoadingAPI.ready();
+            console.log('✓ Вызван ysdk.features.LoadingAPI.ready()');
+            observer.disconnect();
+        }
+
         // Используем MutationObserver для отслеживания изменений класса
         const observer = new MutationObserver(function(mutations) {
             mutations.forEach(function(mutation) {
@@ -85,16 +119,20 @@
                     if (isActive && ysdk) {
                         console.log('Кнопка "Начать строительство" стала видимой');
 
-                        // Вызываем LoadingAPI.ready()
-                        if (ysdk.features && ysdk.features.LoadingAPI) {
-                            ysdk.features.LoadingAPI.ready();
-                            console.log('✓ Вызван ysdk.features.LoadingAPI.ready()');
-                        } else {
-                            console.warn('LoadingAPI недоступен');
-                        }
+                        const onTransitionEnd = function(event) {
+                            if (event.target === startButton) {
+                                callLoadingReady(observer);
+                            }
+                        };
 
-                        // Отключаем наблюдатель, так как событие произошло
-                        observer.disconnect();
+                        startButton.addEventListener('transitionend', onTransitionEnd, { once: true });
+
+                        // Дополнительная проверка, если кнопка уже доступна к нажатию без ожидания transitionend
+                        requestAnimationFrame(function() {
+                            requestAnimationFrame(function() {
+                                callLoadingReady(observer);
+                            });
+                        });
                     }
                 }
             });

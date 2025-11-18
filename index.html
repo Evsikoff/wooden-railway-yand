@@ -52,6 +52,45 @@
 
         var audioContexts = [];
         var originalAudioContext = window.AudioContext || window.webkitAudioContext;
+        var OriginalAudioConstructor = window.Audio;
+
+        // Обеспечиваем бесконтрольное (без системного плеера) воспроизведение звука
+        function enhanceAudioElement(element) {
+            if (!element) return element;
+
+            element.controls = false;
+            element.style.display = 'none';
+            element.playsInline = true;
+            element.setAttribute('controlsList', 'nodownload noplaybackrate noremoteplayback');
+
+            return element;
+        }
+
+        // Перехватываем создание Audio() для скрытия встроенного плеера
+        if (OriginalAudioConstructor) {
+            var AudioWrapper = function(src) {
+                var audioEl = new OriginalAudioConstructor(src);
+                return enhanceAudioElement(audioEl);
+            };
+
+            AudioWrapper.prototype = OriginalAudioConstructor.prototype;
+            window.Audio = AudioWrapper;
+        }
+
+        // Перехватываем создание элементов через document.createElement('audio')
+        var originalCreateElement = document.createElement;
+        document.createElement = function(tagName) {
+            var element = originalCreateElement.apply(document, arguments);
+            if (typeof tagName === 'string' && tagName.toLowerCase() === 'audio') {
+                enhanceAudioElement(element);
+            }
+            return element;
+        };
+
+        // Применяем настройки к уже существующим элементам аудио (на случай, если они есть в разметке)
+        window.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('audio').forEach(enhanceAudioElement);
+        });
 
         // Перехватываем создание AudioContext для отслеживания
         if (originalAudioContext) {
