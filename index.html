@@ -132,6 +132,41 @@
             });
         }
 
+        function tagAudioSource(element, sourceType) {
+            if (!element || element.__audioSourceTag) return;
+            element.__audioSourceTag = sourceType;
+        }
+
+        function logAudioPlaybackStart(element) {
+            if (!element) return;
+
+            var sourceInfo = element.__audioSourceTag || 'unknown';
+            var resolvedSrc = '';
+
+            try {
+                resolvedSrc = element.currentSrc || element.src || '[stream]';
+            } catch (err) {
+                resolvedSrc = '[unavailable: ' + err.message + ']';
+            }
+
+            console.info('[AudioDebug] Playback started', {
+                source: sourceInfo,
+                src: resolvedSrc,
+                time: new Date().toISOString()
+            });
+        }
+
+        function attachPlaybackLogger(element) {
+            if (!element || element.__audioDebugLoggerAttached) return;
+
+            element.addEventListener('play', function(event) {
+                var target = event && event.currentTarget ? event.currentTarget : element;
+                logAudioPlaybackStart(target);
+            });
+
+            element.__audioDebugLoggerAttached = true;
+        }
+
         // Обеспечиваем бесконтрольное (без системного плеера) воспроизведение звука
         function enhanceAudioElement(element) {
             if (!element) return element;
@@ -150,6 +185,8 @@
             element.setAttribute('x-webkit-airplay', 'deny');
             element.setAttribute('playsinline', 'true');
             element.preload = 'none';
+
+            attachPlaybackLogger(element);
 
             if (isYandexBrowser && 'mediaSession' in navigator) {
                 if (!element.__yaMediaNeutralized) {
@@ -176,6 +213,7 @@
         if (OriginalAudioConstructor) {
             var AudioWrapper = function(src) {
                 var audioEl = new OriginalAudioConstructor(src);
+                tagAudioSource(audioEl, 'Audio constructor');
                 return enhanceAudioElement(audioEl);
             };
 
@@ -188,6 +226,7 @@
         document.createElement = function(tagName) {
             var element = originalCreateElement.apply(document, arguments);
             if (typeof tagName === 'string' && tagName.toLowerCase() === 'audio') {
+                tagAudioSource(element, 'document.createElement("audio")');
                 enhanceAudioElement(element);
             }
             return element;
@@ -198,6 +237,7 @@
             document.createElementNS = function(namespaceURI, qualifiedName) {
                 var element = originalCreateElementNS.apply(document, arguments);
                 if (typeof qualifiedName === 'string' && qualifiedName.toLowerCase() === 'audio') {
+                    tagAudioSource(element, 'document.createElementNS("audio")');
                     enhanceAudioElement(element);
                 }
                 return element;
@@ -212,6 +252,8 @@
             mediaProto.cloneNode = function() {
                 var cloned = originalCloneNode.apply(this, arguments);
                 if (cloned && cloned.nodeName && cloned.nodeName.toLowerCase() === 'audio') {
+                    var sourceTag = 'cloneNode from ' + (this && this.__audioSourceTag ? this.__audioSourceTag : 'unknown origin');
+                    tagAudioSource(cloned, sourceTag);
                     enhanceAudioElement(cloned);
                 }
                 return cloned;
@@ -220,7 +262,10 @@
 
         // Применяем настройки к уже существующим элементам аудио (на случай, если они есть в разметке)
         window.addEventListener('DOMContentLoaded', function() {
-            document.querySelectorAll('audio').forEach(enhanceAudioElement);
+            document.querySelectorAll('audio').forEach(function(element) {
+                tagAudioSource(element, 'existing DOM <audio>');
+                enhanceAudioElement(element);
+            });
         });
 
         // Перехватываем создание AudioContext для отслеживания
