@@ -53,6 +53,62 @@
         var audioContexts = [];
         var originalAudioContext = window.AudioContext || window.webkitAudioContext;
         var OriginalAudioConstructor = window.Audio;
+        var isYandexBrowser = /yabrowser/i.test((navigator.userAgent || navigator.vendor || '').toLowerCase());
+
+        function safeDefineProperty(target, property, descriptor, fallbackValue) {
+            if (!target) return;
+            try {
+                Object.defineProperty(target, property, descriptor);
+            } catch (err) {
+                if (arguments.length === 4) {
+                    try {
+                        target[property] = fallbackValue;
+                    } catch (error) {
+                        console.warn('Failed to redefine', property, error);
+                    }
+                }
+            }
+        }
+
+        function neutralizeMediaSession(session) {
+            if (!session) return;
+
+            var noop = function() {};
+            var metadataDescriptor = {
+                configurable: true,
+                enumerable: false,
+                get: function() {
+                    return null;
+                },
+                set: noop
+            };
+
+            safeDefineProperty(session, 'metadata', metadataDescriptor, null);
+
+            if (typeof MediaSession !== 'undefined' && MediaSession.prototype) {
+                safeDefineProperty(MediaSession.prototype, 'metadata', metadataDescriptor, null);
+            }
+
+            safeDefineProperty(session, 'playbackState', {
+                configurable: true,
+                enumerable: false,
+                get: function() {
+                    return 'none';
+                },
+                set: noop
+            }, 'none');
+
+            ['setActionHandler', 'setPositionState', 'setCameraActive', 'setMicrophoneActive'].forEach(function(method) {
+                if (typeof session[method] === 'function') {
+                    safeDefineProperty(session, method, {
+                        configurable: true,
+                        enumerable: false,
+                        writable: true,
+                        value: noop
+                    }, noop);
+                }
+            });
+        }
 
         // Обеспечиваем бесконтрольное (без системного плеера) воспроизведение звука
         function enhanceAudioElement(element) {
@@ -73,51 +129,22 @@
             element.setAttribute('playsinline', 'true');
             element.preload = 'none';
 
-            // Отключаем Media Session API для этого элемента
-            element.addEventListener('play', function() {
-                if ('mediaSession' in navigator) {
-                    navigator.mediaSession.metadata = null;
-                    navigator.mediaSession.setActionHandler('play', null);
-                    navigator.mediaSession.setActionHandler('pause', null);
-                    navigator.mediaSession.setActionHandler('seekbackward', null);
-                    navigator.mediaSession.setActionHandler('seekforward', null);
-                    navigator.mediaSession.setActionHandler('previoustrack', null);
-                    navigator.mediaSession.setActionHandler('nexttrack', null);
+            if (isYandexBrowser && 'mediaSession' in navigator) {
+                if (!element.__yaMediaNeutralized) {
+                    element.addEventListener('play', function() {
+                        neutralizeMediaSession(navigator.mediaSession);
+                    });
+                    element.__yaMediaNeutralized = true;
                 }
-            });
+                neutralizeMediaSession(navigator.mediaSession);
+            }
 
             return element;
         }
 
         // Глобальное отключение Media Session API для предотвращения показа системного плеера
-        if ('mediaSession' in navigator) {
-            // Очищаем метаданные
-            navigator.mediaSession.metadata = null;
-
-            // Отключаем все обработчики медиа-действий
-            try {
-                navigator.mediaSession.setActionHandler('play', null);
-                navigator.mediaSession.setActionHandler('pause', null);
-                navigator.mediaSession.setActionHandler('seekbackward', null);
-                navigator.mediaSession.setActionHandler('seekforward', null);
-                navigator.mediaSession.setActionHandler('previoustrack', null);
-                navigator.mediaSession.setActionHandler('nexttrack', null);
-                navigator.mediaSession.setActionHandler('stop', null);
-                navigator.mediaSession.setActionHandler('seekto', null);
-            } catch (e) {
-                console.log('Media Session API handlers cleanup:', e);
-            }
-
-            // Перехватываем установку метаданных
-            var originalMetadataSetter = Object.getOwnPropertyDescriptor(MediaSession.prototype, 'metadata').set;
-            Object.defineProperty(navigator.mediaSession, 'metadata', {
-                set: function() {
-                    // Игнорируем попытки установить метаданные
-                },
-                get: function() {
-                    return null;
-                }
-            });
+        if (isYandexBrowser && 'mediaSession' in navigator) {
+            neutralizeMediaSession(navigator.mediaSession);
         }
 
         // Перехватываем создание Audio() для скрытия встроенного плеера
