@@ -59793,6 +59793,7 @@ var lottie = lottie$1.exports
             this.elToAnimate.push(document.querySelector(".settings-switch-day-night")),
             this.elAudioBtn = document.getElementById("settings-audio-btn"),
             this.elMusicBtn = document.getElementById("settings-music-btn"),
+            this.elMusicBtn && (this.elMusicBtn.closest(".settings-row").style.display = "none"), 
             this.elHelpBtn = document.getElementById("settings-help-btn"),
             document.querySelectorAll(".settings-row").forEach((function(t) {
                 return e.elToAnimate.push(t)
