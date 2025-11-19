@@ -36713,6 +36713,7 @@ var isSSR = "undefined" == typeof window, DetectUA = function() {
     _defineProperty2(this, "isChrome", "Chrome" === browserName),
     _defineProperty2(this, "isOpera", "Opera" === browserName),
     _defineProperty2(this, "isSafari", "Safari" === browserName),
+    _defineProperty2(this, "isYandex", "Yandex Browser" === browserName),
     _defineProperty2(this, "isTablet", detectUA.isTablet),
     _defineProperty2(this, "isRetina", window.devicePixelRatio && window.devicePixelRatio >= 1.5),
     _defineProperty2(this, "devicePixelRatio", window.devicePixelRatio || 1),
@@ -64439,7 +64440,7 @@ var Support = function() {
         key: "checkSupport",
         value: function() {
             properties._isSupportedDevice = !0,
-            properties._isSupportedBrowser = (browser.isChrome || browser.isSafari || browser.isEdge || browser.isFirefox || browser.isOpera) && !browser.isIE,
+            properties._isSupportedBrowser = (browser.isChrome || browser.isSafari || browser.isEdge || browser.isFirefox || browser.isOpera || browser.isYandex) && !browser.isIE,
             properties._isSupportedWebGL = this.checkSupportWebGL(),
             properties._isSupportedWebXR = !0,
             properties._isSupported = properties._isSupportedDevice && properties._isSupportedBrowser && properties._isSupportedWebGL,

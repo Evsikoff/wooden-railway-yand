@@ -52,6 +52,126 @@
 
         var audioContexts = [];
         var originalAudioContext = window.AudioContext || window.webkitAudioContext;
+        var OriginalAudioConstructor = window.Audio;
+        var isYandexBrowser = /yabrowser/i.test((navigator.userAgent || navigator.vendor || '').toLowerCase());
+
+        function safeDefineProperty(target, property, descriptor, fallbackValue) {
+            if (!target) return;
+            try {
+                Object.defineProperty(target, property, descriptor);
+            } catch (err) {
+                if (arguments.length === 4) {
+                    try {
+                        target[property] = fallbackValue;
+                    } catch (error) {
+                        console.warn('Failed to redefine', property, error);
+                    }
+                }
+            }
+        }
+
+        function neutralizeMediaSession(session) {
+            if (!session) return;
+
+            var noop = function() {};
+            var metadataDescriptor = {
+                configurable: true,
+                enumerable: false,
+                get: function() {
+                    return null;
+                },
+                set: noop
+            };
+
+            safeDefineProperty(session, 'metadata', metadataDescriptor, null);
+
+            if (typeof MediaSession !== 'undefined' && MediaSession.prototype) {
+                safeDefineProperty(MediaSession.prototype, 'metadata', metadataDescriptor, null);
+            }
+
+            safeDefineProperty(session, 'playbackState', {
+                configurable: true,
+                enumerable: false,
+                get: function() {
+                    return 'none';
+                },
+                set: noop
+            }, 'none');
+
+            ['setActionHandler', 'setPositionState', 'setCameraActive', 'setMicrophoneActive'].forEach(function(method) {
+                if (typeof session[method] === 'function') {
+                    safeDefineProperty(session, method, {
+                        configurable: true,
+                        enumerable: false,
+                        writable: true,
+                        value: noop
+                    }, noop);
+                }
+            });
+        }
+
+        // Обеспечиваем бесконтрольное (без системного плеера) воспроизведение звука
+        function enhanceAudioElement(element) {
+            if (!element) return element;
+
+            // Базовые атрибуты для скрытия контроллеров
+            element.controls = false;
+            element.style.display = 'none';
+            element.playsInline = true;
+
+            // Отключаем удаленное воспроизведение (для Яндекс браузера и других)
+            element.disableRemotePlayback = true;
+            element.setAttribute('disableRemotePlayback', 'true');
+            element.setAttribute('controlsList', 'nodownload noplaybackrate noremoteplayback');
+
+            // Дополнительные атрибуты для предотвращения показа медиа-контроллеров
+            element.setAttribute('x-webkit-airplay', 'deny');
+            element.setAttribute('playsinline', 'true');
+            element.preload = 'none';
+
+            if (isYandexBrowser && 'mediaSession' in navigator) {
+                if (!element.__yaMediaNeutralized) {
+                    element.addEventListener('play', function() {
+                        neutralizeMediaSession(navigator.mediaSession);
+                    });
+                    element.__yaMediaNeutralized = true;
+                }
+                neutralizeMediaSession(navigator.mediaSession);
+            }
+
+            return element;
+        }
+
+        // Глобальное отключение Media Session API для предотвращения показа системного плеера
+        if (isYandexBrowser && 'mediaSession' in navigator) {
+            neutralizeMediaSession(navigator.mediaSession);
+        }
+
+        // Перехватываем создание Audio() для скрытия встроенного плеера
+        if (OriginalAudioConstructor) {
+            var AudioWrapper = function(src) {
+                var audioEl = new OriginalAudioConstructor(src);
+                return enhanceAudioElement(audioEl);
+            };
+
+            AudioWrapper.prototype = OriginalAudioConstructor.prototype;
+            window.Audio = AudioWrapper;
+        }
+
+        // Перехватываем создание элементов через document.createElement('audio')
+        var originalCreateElement = document.createElement;
+        document.createElement = function(tagName) {
+            var element = originalCreateElement.apply(document, arguments);
+            if (typeof tagName === 'string' && tagName.toLowerCase() === 'audio') {
+                enhanceAudioElement(element);
+            }
+            return element;
+        };
+
+        // Применяем настройки к уже существующим элементам аудио (на случай, если они есть в разметке)
+        window.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('audio').forEach(enhanceAudioElement);
+        });
 
         // Перехватываем создание AudioContext для отслеживания
         if (originalAudioContext) {
