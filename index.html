@@ -168,6 +168,20 @@
             return element;
         };
 
+        // Howler.js и нативные API создают новые источники звука через cloneNode() уже после клика «Начать строительство».
+        // Такие клоны не проходят через document.createElement, поэтому принудительно оборачиваем и их.
+        var mediaProto = window.HTMLMediaElement && window.HTMLMediaElement.prototype;
+        if (mediaProto && mediaProto.cloneNode) {
+            var originalCloneNode = mediaProto.cloneNode;
+            mediaProto.cloneNode = function() {
+                var cloned = originalCloneNode.apply(this, arguments);
+                if (cloned && cloned.nodeName && cloned.nodeName.toLowerCase() === 'audio') {
+                    enhanceAudioElement(cloned);
+                }
+                return cloned;
+            };
+        }
+
         // Применяем настройки к уже существующим элементам аудио (на случай, если они есть в разметке)
         window.addEventListener('DOMContentLoaded', function() {
             document.querySelectorAll('audio').forEach(enhanceAudioElement);
