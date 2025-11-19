@@ -54,6 +54,8 @@
         var originalAudioContext = window.AudioContext || window.webkitAudioContext;
         var OriginalAudioConstructor = window.Audio;
         var isYandexBrowser = /yabrowser/i.test((navigator.userAgent || navigator.vendor || '').toLowerCase());
+        var mediaSessionPollTimer = null;
+        var MEDIA_SESSION_POLL_INTERVAL = 750;
 
         function safeDefineProperty(target, property, descriptor, fallbackValue) {
             if (!target) return;
@@ -110,6 +112,26 @@
             });
         }
 
+        function ensureContinuousNeutralization() {
+            if (!isYandexBrowser || !('mediaSession' in navigator)) return;
+            if (mediaSessionPollTimer !== null) return;
+
+            mediaSessionPollTimer = window.setInterval(function() {
+                try {
+                    neutralizeMediaSession(navigator.mediaSession);
+                } catch (err) {
+                    console.warn('Media Session neutralization heartbeat failed:', err);
+                }
+            }, MEDIA_SESSION_POLL_INTERVAL);
+
+            window.addEventListener('pagehide', function() {
+                if (mediaSessionPollTimer !== null) {
+                    clearInterval(mediaSessionPollTimer);
+                    mediaSessionPollTimer = null;
+                }
+            });
+        }
+
         // Обеспечиваем бесконтрольное (без системного плеера) воспроизведение звука
         function enhanceAudioElement(element) {
             if (!element) return element;
@@ -133,10 +155,12 @@
                 if (!element.__yaMediaNeutralized) {
                     element.addEventListener('play', function() {
                         neutralizeMediaSession(navigator.mediaSession);
+                        ensureContinuousNeutralization();
                     });
                     element.__yaMediaNeutralized = true;
                 }
                 neutralizeMediaSession(navigator.mediaSession);
+                ensureContinuousNeutralization();
             }
 
             return element;
@@ -145,6 +169,7 @@
         // Глобальное отключение Media Session API для предотвращения показа системного плеера
         if (isYandexBrowser && 'mediaSession' in navigator) {
             neutralizeMediaSession(navigator.mediaSession);
+            ensureContinuousNeutralization();
         }
 
         // Перехватываем создание Audio() для скрытия встроенного плеера
@@ -167,6 +192,17 @@
             }
             return element;
         };
+
+        var originalCreateElementNS = document.createElementNS;
+        if (originalCreateElementNS) {
+            document.createElementNS = function(namespaceURI, qualifiedName) {
+                var element = originalCreateElementNS.apply(document, arguments);
+                if (typeof qualifiedName === 'string' && qualifiedName.toLowerCase() === 'audio') {
+                    enhanceAudioElement(element);
+                }
+                return element;
+            };
+        }
 
         // Howler.js и нативные API создают новые источники звука через cloneNode() уже после клика «Начать строительство».
         // Такие клоны не проходят через document.createElement, поэтому принудительно оборачиваем и их.
