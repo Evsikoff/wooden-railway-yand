@@ -43327,11 +43327,6 @@ var TinyInstancedMesh = function(e) {
     }, {
         key: "init",
         value: function() {
-            var e = soundAudio.items.propeller;
-            e.onInitialized.add((function() {}
-            )),
-            this.containerPlaneParts.add(e.container),
-            e.play(),
             this._setFlyPath(),
             this._initUfoLightbeam(),
             this._setAnimalMaterial(),
@@ -44568,9 +44563,7 @@ var TinyInstancedMesh = function(e) {
             this.activeMode = "N",
             this.isActivated = !0,
             this._startTransition(),
-            document.body.classList.add("night-time"),
-            this.cricketAudio = soundAudio.items.cricket,
-            this.cricketAudio.play())
+            document.body.classList.add("night-time"))
         }
     }, {
         key: "_toggleDayMode",
@@ -44592,7 +44585,6 @@ var TinyInstancedMesh = function(e) {
         key: "update",
         value: function(e) {
             this.isTransitioning && (this.activeRatio = math.saturate(this.activeRatio + (!0 === this.isActivated ? 1 : -1) * (e / this.transitionSpeedSeconds)),
-            this.cricketAudio && (this.cricketAudio.volume = this.activeRatio),
             this.transitionRatio = (properties.time - this.transitionStartTime) / this.transitionSpeedSeconds,
             this.activeRatio >= 1 ? (this.activeRatio = 1,
             this.isTransitioning = !1) : this.activeRatio <= 0 && (this.activeRatio = 0,
@@ -59252,7 +59244,7 @@ var lottie = lottie$1.exports
   , MusicAudio = function() {
     function e() {
         _classCallCheck2(this, e),
-        _defineProperty2(this, "isActive", !0),
+        _defineProperty2(this, "isActive", !1),
         _defineProperty2(this, "volume", 0),
         _defineProperty2(this, "listener", null),
         _defineProperty2(this, "_boundOnBodyClick", null),
@@ -59802,11 +59794,11 @@ var lottie = lottie$1.exports
                 btn: this.elAudioBtn
             }),
             this.volumeSprite.load(["settings/volume/volumeOffHover", "settings/volume/volumeOnHover", "settings/volume/volumeOnToOff", "settings/volume/volumeOffToOn"]),
-            this.musicSprite = new spriteHandler({
+            this.elMusicBtn && (this.musicSprite = new spriteHandler({
                 btn: this.elMusicBtn,
                 preventClickDelay: 1e3
             }),
-            this.musicSprite.load(["settings/music/musicOffHover", "settings/music/musicOnHover", "settings/music/musicOnToOff", "settings/music/musicOffToOn"]),
+            this.musicSprite.load(["settings/music/musicOffHover", "settings/music/musicOnHover", "settings/music/musicOnToOff", "settings/music/musicOffToOn"])),
             this.helpSprite = new spriteHandler({
                 btn: this.elHelpBtn
             }),
@@ -59834,14 +59826,14 @@ var lottie = lottie$1.exports
                 return e.onAudioBtnClick()
             }
             )),
-            this.elMusicBtn.addEventListener("pointerdown", (function() {
+            this.elMusicBtn && this.elMusicBtn.addEventListener("pointerdown", (function() {
                 return e.onMusicBtnClick()
             }
             )),
             this.volumeSprite.init({
                 volume: !0
             }),
-            this.musicSprite.init({
+            this.musicSprite && this.musicSprite.init({
                 volume: !0
             }),
             this.helpSprite.init({
