@@ -39806,7 +39806,7 @@ for (var AUDIO_DATA = {
         url: "bgm.mp3",
         isLoopable: !0,
         isPositional: !1,
-        isPreload: !1,
+        isPreload: !0,
         isElem: !0
     }]
 }, AudioGroup = function() {
