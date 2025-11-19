@@ -58,12 +58,66 @@
         function enhanceAudioElement(element) {
             if (!element) return element;
 
+            // Базовые атрибуты для скрытия контроллеров
             element.controls = false;
             element.style.display = 'none';
             element.playsInline = true;
+
+            // Отключаем удаленное воспроизведение (для Яндекс браузера и других)
+            element.disableRemotePlayback = true;
+            element.setAttribute('disableRemotePlayback', 'true');
             element.setAttribute('controlsList', 'nodownload noplaybackrate noremoteplayback');
 
+            // Дополнительные атрибуты для предотвращения показа медиа-контроллеров
+            element.setAttribute('x-webkit-airplay', 'deny');
+            element.setAttribute('playsinline', 'true');
+            element.preload = 'none';
+
+            // Отключаем Media Session API для этого элемента
+            element.addEventListener('play', function() {
+                if ('mediaSession' in navigator) {
+                    navigator.mediaSession.metadata = null;
+                    navigator.mediaSession.setActionHandler('play', null);
+                    navigator.mediaSession.setActionHandler('pause', null);
+                    navigator.mediaSession.setActionHandler('seekbackward', null);
+                    navigator.mediaSession.setActionHandler('seekforward', null);
+                    navigator.mediaSession.setActionHandler('previoustrack', null);
+                    navigator.mediaSession.setActionHandler('nexttrack', null);
+                }
+            });
+
             return element;
+        }
+
+        // Глобальное отключение Media Session API для предотвращения показа системного плеера
+        if ('mediaSession' in navigator) {
+            // Очищаем метаданные
+            navigator.mediaSession.metadata = null;
+
+            // Отключаем все обработчики медиа-действий
+            try {
+                navigator.mediaSession.setActionHandler('play', null);
+                navigator.mediaSession.setActionHandler('pause', null);
+                navigator.mediaSession.setActionHandler('seekbackward', null);
+                navigator.mediaSession.setActionHandler('seekforward', null);
+                navigator.mediaSession.setActionHandler('previoustrack', null);
+                navigator.mediaSession.setActionHandler('nexttrack', null);
+                navigator.mediaSession.setActionHandler('stop', null);
+                navigator.mediaSession.setActionHandler('seekto', null);
+            } catch (e) {
+                console.log('Media Session API handlers cleanup:', e);
+            }
+
+            // Перехватываем установку метаданных
+            var originalMetadataSetter = Object.getOwnPropertyDescriptor(MediaSession.prototype, 'metadata').set;
+            Object.defineProperty(navigator.mediaSession, 'metadata', {
+                set: function() {
+                    // Игнорируем попытки установить метаданные
+                },
+                get: function() {
+                    return null;
+                }
+            });
         }
 
         // Перехватываем создание Audio() для скрытия встроенного плеера
