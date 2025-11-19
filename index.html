@@ -196,9 +196,6 @@
             document.querySelectorAll('audio').forEach(enhanceAudioElement);
         });
 
-        // Флаг для отслеживания, был ли звук замучен из-за потери фокуса
-        var mutedDueToBlur = false;
-
         // Обработчик изменения видимости страницы
         document.addEventListener('visibilitychange', function() {
             if (document.hidden) {
@@ -208,25 +205,11 @@
             }
         });
 
-        // Дополнительные обработчики для надежности (на случай, если visibilitychange не сработает)
-        window.addEventListener('blur', function() {
-            pauseAllAudio();
-        });
-
-        window.addEventListener('focus', function() {
-            resumeAllAudio();
-        });
-
         function pauseAllAudio() {
             // Приостанавливаем Howler.js если он используется
             if (window.Howler) {
                 try {
-                    // Проверяем, не был ли звук уже выключен до потери фокуса
-                    if (!window.Howler._muted) {
-                        window.Howler.mute(true);
-                        mutedDueToBlur = true;
-                        console.log('Audio muted due to window blur/hidden');
-                    }
+                    window.Howler.mute(true);
                 } catch (err) {
                     console.warn('Failed to mute Howler:', err);
                 }
@@ -242,12 +225,10 @@
         }
 
         function resumeAllAudio() {
-            // Возобновляем Howler.js только если он был замучен из-за потери фокуса
-            if (window.Howler && mutedDueToBlur) {
+            // Возобновляем Howler.js если он был приглушен
+            if (window.Howler) {
                 try {
                     window.Howler.mute(false);
-                    mutedDueToBlur = false;
-                    console.log('Audio unmuted due to window focus/visible');
                 } catch (err) {
                     console.warn('Failed to unmute Howler:', err);
                 }
