@@ -31,4 +31,7 @@ To completely avoid the Media Session UI you need to stop using media elements f
 1. Remove `isElem: !0` from `bgm` (and any other looping tracks) so `AudioItem` goes down the buffer/XHR path instead of `document.createElement("audio")`.
 2. Let the asset decode into an `AudioBuffer` and play via `AudioContext` only (`createBufferSource`). Web Audio sources do not register as document-level media sessions, so Yandex Browser has nothing to expose.
 
-Until the bundle is updated to drop `isElem` for music, the system player will keep appearing because an `<audio>` element is still responsible for actual playback.
+## Fix applied
+`bgm.mp3` and the only other looping DOM-backed asset (`cricket.mp3`) no longer declare `isElem: !0` inside `index.5955834b.js`. This forces
+`AudioItem` to stay on the XHR/`AudioBuffer` code path, so background music and ambient loops are generated purely through `AudioContext`
+sources. Because no DOM `<audio>` element is created for those tracks anymore, Yandex Browser has nothing to promote to its system player UI.
