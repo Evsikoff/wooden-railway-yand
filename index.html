@@ -44,29 +44,6 @@
     <script src="./yandex-sdk-integration.js"></script>
     <!-- Howler.js Audio Library -->
     <script src="https://cdn.jsdelivr.net/npm/howler@2.2.4/dist/howler.min.js"></script>
-    <!-- Настройка Howler.js на использование HTML5 Audio вместо Web Audio API -->
-    <script>
-        // Ждем полной загрузки Howler.js и настраиваем его
-        (function() {
-            if (typeof Howler !== 'undefined') {
-                // Глобально отключаем Web Audio API, заставляя использовать HTML5 Audio
-                Howler.html5PoolSize = 10;
-                Howler.autoUnlock = true;
-
-                // Переопределяем метод создания нового Howl для принудительного использования HTML5
-                var originalHowl = window.Howl;
-                window.Howl = function(options) {
-                    // Устанавливаем html5: true для всех создаваемых экземпляров
-                    if (options && typeof options === 'object') {
-                        options.html5 = true;
-                    }
-                    return new originalHowl(options);
-                };
-
-                console.log('Howler.js настроен на использование HTML5 Audio');
-            }
-        })();
-    </script>
     <!-- <script async src="https://www.googletagmanager.com/gtag/js?id=G-NVP1BM95RS"></script>
     <script>if(-1!==document.location.hostname.search("choochooworld.com")){function gtag(){dataLayer.push(arguments)}window.dataLayer=window.dataLayer||[],gtag("js",new Date),gtag("config","G-NVP1BM95RS")}</script> -->
     <script>function preventZoom(e){e.preventDefault(),document.body.style.zoom=1}Object.assign||document.documentElement.classList.add("not-supported not-supported--browser"),document.documentElement.classList.remove("no-js"),/(ipad|iphone|android)/i.test((navigator.userAgent||navigator.vendor).toLowerCase())?document.documentElement.classList.add("is-mobile"):document.documentElement.classList.add("is-desktop"),document.addEventListener("gesturestart",(e=>preventZoom(e))),document.addEventListener("gesturechange",(e=>preventZoom(e))),document.addEventListener("gestureend",(e=>preventZoom(e)))</script>
