@@ -56,6 +56,7 @@
         var isYandexBrowser = /yabrowser/i.test((navigator.userAgent || navigator.vendor || '').toLowerCase());
         var mediaSessionPollTimer = null;
         var MEDIA_SESSION_POLL_INTERVAL = 750;
+        var playbackLoggerInstalled = false;
 
         function safeDefineProperty(target, property, descriptor, fallbackValue) {
             if (!target) return;
@@ -156,15 +157,45 @@
             });
         }
 
-        function attachPlaybackLogger(element) {
-            if (!element || element.__audioDebugLoggerAttached) return;
+        function installPlaybackLogger() {
+            if (playbackLoggerInstalled) return;
 
-            element.addEventListener('play', function(event) {
-                var target = event && event.currentTarget ? event.currentTarget : element;
-                logAudioPlaybackStart(target);
-            });
+            var mediaProto = window.HTMLMediaElement && window.HTMLMediaElement.prototype;
+            if (!mediaProto || typeof mediaProto.play !== 'function') {
+                return;
+            }
 
-            element.__audioDebugLoggerAttached = true;
+            var originalPlay = mediaProto.play;
+            mediaProto.play = function() {
+                var playPromise = originalPlay.apply(this, arguments);
+                var target = this;
+                var isAudioElement = target && target.nodeName && target.nodeName.toLowerCase() === 'audio';
+
+                if (!isAudioElement) {
+                    return playPromise;
+                }
+
+                var logOnce = function() {
+                    logAudioPlaybackStart(target);
+                };
+
+                if (playPromise && typeof playPromise.then === 'function') {
+                    playPromise.then(function() {
+                        logOnce();
+                    }).catch(function(err) {
+                        if (err && err.name === 'AbortError') {
+                            return;
+                        }
+                        console.warn('[AudioDebug] Playback promise rejected before start log:', err);
+                    });
+                } else {
+                    logOnce();
+                }
+
+                return playPromise;
+            };
+
+            playbackLoggerInstalled = true;
         }
 
         // Обеспечиваем бесконтрольное (без системного плеера) воспроизведение звука
@@ -186,8 +217,6 @@
             element.setAttribute('playsinline', 'true');
             element.preload = 'none';
 
-            attachPlaybackLogger(element);
-
             if (isYandexBrowser && 'mediaSession' in navigator) {
                 if (!element.__yaMediaNeutralized) {
                     element.addEventListener('play', function() {
@@ -208,6 +237,8 @@
             neutralizeMediaSession(navigator.mediaSession);
             ensureContinuousNeutralization();
         }
+
+        installPlaybackLogger();
 
         // Перехватываем создание Audio() для скрытия встроенного плеера
         if (OriginalAudioConstructor) {
