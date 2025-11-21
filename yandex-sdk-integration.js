@@ -144,9 +144,23 @@
             attributeFilter: ['class']
         });
 
+        // Добавляем слушатель на наведение мыши для вызова LoadingAPI.ready()
+        startButton.addEventListener('pointerenter', function() {
+            console.log('Курсор наведен на кнопку "Начать строительство"');
+            if (ysdk && ysdk.features && ysdk.features.LoadingAPI) {
+                ysdk.features.LoadingAPI.ready();
+                console.log('✓ Вызван ysdk.features.LoadingAPI.ready() при наведении мыши');
+            }
+        });
+
         // Добавляем слушатель на клик по кнопке для вызова GameplayAPI.start()
         startButton.addEventListener('click', function() {
             console.log('Нажата кнопка "Начать строительство"');
+            // Вызываем LoadingAPI.ready() при клике
+            if (ysdk && ysdk.features && ysdk.features.LoadingAPI) {
+                ysdk.features.LoadingAPI.ready();
+                console.log('✓ Вызван ysdk.features.LoadingAPI.ready() при клике');
+            }
             callGameplayStart();
         });
     }
