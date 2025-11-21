@@ -39800,7 +39800,7 @@ for (var AUDIO_DATA = {
         isLoopable: !0,
         isPositional: !1,
         isPreload: !1,
-        isElem: !0
+        isElem: !1
     }],
     music: [{
         id: "bgm",
