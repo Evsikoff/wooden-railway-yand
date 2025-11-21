@@ -65023,6 +65023,9 @@ var Support = function() {
                 e.resize()
             }
             ), null, 100)
+                if (window.ysdk) {
+        ysdk.features.LoadingAPI.ready();
+    }
         }
     }, {
         key: "_onResize",
