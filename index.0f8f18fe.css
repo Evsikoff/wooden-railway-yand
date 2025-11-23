@@ -4453,7 +4453,7 @@ a {
     position: absolute;
     width: 90%;
     max-width: 600px;
-    top: 55%;
+    top: 48%;
     left: 50%;
     transform: translate3d(-50%, -50%, 0);
     display: flex;
@@ -4591,7 +4591,7 @@ a {
     align-items: center;
     justify-content: center;
     gap: 20px;
-    margin-top: 20px
+    margin-top: 10px
 }
 
 @media (max-width: 812px) {
@@ -4606,7 +4606,7 @@ a {
 }
 
 #preloader-start--copy {
-    margin-top: 20px;
+    margin-top: 10px;
     color: #0158b4;
     font-family: karlabold, sans-serif;
     font-size: 20px
