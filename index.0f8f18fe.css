@@ -4494,13 +4494,13 @@ a {
 }
 
 #page--preloader .page--content .preloader-lottie {
-    top: 0
+    position: relative;
+    top: 24px
 }
 
 @media (max-width: 812px) {
     #page--preloader .page--content .preloader-lottie {
-        top: -40px;
-        position: relative
+        top: 10px
     }
 }
 
